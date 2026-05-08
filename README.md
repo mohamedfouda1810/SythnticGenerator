@@ -92,10 +92,10 @@ docker-compose up --build
 
 | Name | Role |
 |------|------|
+| Mohamed Ebrahim | Team Member |
+| Mohamed Wael | Team Member |
 | Habiba Khalil | Team Member |
 | Abdelrahman Hussein | Team Member |
-| Mohamed Wael | Team Member |
-| Mohamed Ebrahim | Team Member |
 | Amr Sayed | Team Member |
 
 **Supervisor**: Dr. Yasser Kamal
