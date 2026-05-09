@@ -8,7 +8,7 @@
 2. **Mimesis (Rule-Based)** — Define a schema with 25+ field types, instantly generate structured data
 
 **Supervisor**: Dr. Yasser Kamal  
-**Team**: Habiba Khalil, Abdelrahman Hussein, Mohamed Wael, Mohamed Ebrahim, Amr Sayed
+**Team**:  Mohamed Ebrahim, Mohamed Wael,ZHabiba Khalil, Abdelrahman Hussein, Amr Sayed
 
 ---
 

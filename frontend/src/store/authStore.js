@@ -44,6 +44,12 @@ const useAuthStore = create((set, get) => ({
     }));
   },
 
+  updateAvatar: (avatarUrl) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, avatar_url: avatarUrl } : null,
+    }));
+  },
+
   restore: async () => {
     const token = localStorage.getItem('token');
     if (!token) {

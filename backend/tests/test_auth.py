@@ -7,6 +7,8 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
+from backend.tests.conftest import register_and_verify, get_auth_header
+
 
 # ─── Helpers ──────────────────────────────────────────────────────
 
@@ -26,19 +28,16 @@ async def login_user(client: AsyncClient, email="test@example.com", password="Te
     })
 
 
-async def get_auth_header(client: AsyncClient, email="test@example.com", password="Test1234!"):
-    resp = await login_user(client, email, password)
-    token = resp.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
-
-
 # ─── Register ─────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
 async def test_register_success(client: AsyncClient):
     resp = await register_user(client)
     assert resp.status_code == 201
-    assert resp.json()["message"] == "Registration successful"
+    data = resp.json()
+    assert "Registration successful" in data["message"]
+    assert "dev_token" in data  # Dev mode returns token
+    assert "dev_verify_url" in data  # Dev mode returns verify URL
 
 
 @pytest.mark.asyncio
@@ -83,7 +82,7 @@ async def test_register_short_password(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_login_success(client: AsyncClient):
-    await register_user(client)
+    await register_and_verify(client)
     resp = await login_user(client)
     assert resp.status_code == 200
     data = resp.json()
@@ -95,8 +94,19 @@ async def test_login_success(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_login_unverified_email(client: AsyncClient):
+    """Login should fail with 403 if email is not verified."""
+    await register_user(client)  # Register but DON'T verify
+    resp = await login_user(client)
+    assert resp.status_code == 403
+    detail = resp.json()["detail"]
+    assert detail["error"] == "email_not_verified"
+    assert detail["can_resend"] is True
+
+
+@pytest.mark.asyncio
 async def test_login_wrong_password(client: AsyncClient):
-    await register_user(client)
+    await register_and_verify(client)
     resp = await login_user(client, password="WrongPassword!")
     assert resp.status_code == 401
 
@@ -107,11 +117,45 @@ async def test_login_nonexistent_email(client: AsyncClient):
     assert resp.status_code == 401
 
 
+# ─── Email Verification ──────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_verify_email_flow(client: AsyncClient):
+    """Register → get token → verify → login succeeds."""
+    resp = await register_user(client)
+    token = resp.json()["dev_token"]
+
+    # Verify email
+    verify_resp = await client.get(f"/api/auth/verify-email?token={token}")
+    assert verify_resp.status_code == 200
+    assert verify_resp.json()["message"] == "Email verified successfully"
+
+    # Now login should work
+    login_resp = await login_user(client)
+    assert login_resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_verify_invalid_token(client: AsyncClient):
+    resp = await client.get("/api/auth/verify-email?token=invalid-token")
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_resend_verification(client: AsyncClient):
+    await register_user(client)
+    resp = await client.post("/api/auth/resend-verification", json={
+        "email": "test@example.com",
+    })
+    assert resp.status_code == 200
+    assert "dev_token" in resp.json()
+    assert "dev_verify_url" in resp.json()
+
+
 # ─── Protected routes ────────────────────────────────────────────
 
 @pytest.mark.asyncio
 async def test_me_authenticated(client: AsyncClient):
-    await register_user(client)
     headers = await get_auth_header(client)
     resp = await client.get("/api/auth/me", headers=headers)
     assert resp.status_code == 200
@@ -128,7 +172,6 @@ async def test_me_unauthenticated(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_logout(client: AsyncClient):
-    await register_user(client)
     headers = await get_auth_header(client)
     resp = await client.post("/api/auth/logout", headers=headers)
     assert resp.status_code == 200
@@ -142,7 +185,7 @@ async def test_logout(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_refresh_token(client: AsyncClient):
-    await register_user(client)
+    await register_and_verify(client)
     login_resp = await login_user(client)
     refresh_token = login_resp.json()["refresh_token"]
 
@@ -157,7 +200,7 @@ async def test_refresh_token(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_forgot_reset_password_flow(client: AsyncClient):
-    await register_user(client)
+    await register_and_verify(client)
 
     # Forgot password
     forgot_resp = await client.post("/api/auth/forgot-password", json={

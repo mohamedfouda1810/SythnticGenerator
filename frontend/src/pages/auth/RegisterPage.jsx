@@ -27,11 +27,18 @@ export default function RegisterPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldError, setFieldError] = useState({ email: '', username: '' });
 
   const strength = getStrength(form.password);
   const passwordsMatch = form.confirm_password.length > 0 && form.password === form.confirm_password;
 
-  const set = (field) => (e) => setForm((p) => ({ ...p, [field]: e.target.value }));
+  const set = (field) => (e) => {
+    setForm((p) => ({ ...p, [field]: e.target.value }));
+    // Clear field-specific error when user types
+    if (field === 'email' || field === 'username') {
+      setFieldError((p) => ({ ...p, [field]: '' }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,16 +54,30 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (err) {
-      setError(err);
+      // 409 field-specific errors
+      const errLower = typeof err === 'string' ? err.toLowerCase() : '';
+      if (errLower.includes('email')) {
+        setFieldError({ email: err, username: '' });
+      } else if (errLower.includes('username')) {
+        setFieldError({ email: '', username: err });
+      } else {
+        setError(err);
+      }
       return;
     }
 
-    toast.success('Account created! Please sign in.');
-    navigate('/login');
+    toast.success('Account created! Check your email for verification.');
+    navigate('/verify-pending', {
+      state: {
+        email: form.email,
+        devVerifyUrl: data.dev_verify_url || null,
+        devToken: data.dev_token || null,
+      },
+    });
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex pt-16">
       {/* Left — illustration */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden">
         <ParticleBackground />
@@ -110,9 +131,14 @@ export default function RegisterPage() {
                   onChange={set('username')}
                   required minLength={3} maxLength={30}
                   placeholder="yourname"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none transition-colors"
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border ${fieldError.username ? 'border-[var(--accent-error)]' : 'border-[var(--border-default)]'} text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none transition-colors`}
                 />
               </div>
+              {fieldError.username && (
+                <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="text-xs text-[var(--accent-error)] mt-1">
+                  {fieldError.username}
+                </motion.p>
+              )}
             </div>
 
             {/* Email */}
@@ -126,9 +152,14 @@ export default function RegisterPage() {
                   onChange={set('email')}
                   required
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none transition-colors"
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border ${fieldError.email ? 'border-[var(--accent-error)]' : 'border-[var(--border-default)]'} text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none transition-colors`}
                 />
               </div>
+              {fieldError.email && (
+                <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="text-xs text-[var(--accent-error)] mt-1">
+                  {fieldError.email} <Link to="/login" className="text-[var(--accent-primary)] hover:underline">Try logging in?</Link>
+                </motion.p>
+              )}
             </div>
 
             {/* Password */}

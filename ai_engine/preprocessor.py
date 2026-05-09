@@ -25,37 +25,42 @@ from ai_engine.schemas import ColumnMetadata, ColumnType, PreprocessorResult
 # ---------------------------------------------------------------------------
 
 # Patterns that suggest a column contains PII (case-insensitive substrings)
-PII_PATTERNS: List[str] = [
+# STRICT PII: Always removed — clearly sensitive identifiers
+STRICT_PII_PATTERNS: List[str] = [
     "ssn",
     "social_security",
-    "email",
-    "e_mail",
-    "phone",
-    "telephone",
-    "mobile",
-    "first_name",
-    "last_name",
-    "full_name",
-    "surname",
     "passport",
     "national_id",
     "driver_license",
     "credit_card",
     "card_number",
-    "patient_id",
-    "patient_name",
-    "person_name",
-    "user_name",
-    "username",
+    "cvv",
+    "password",
+    "pin",
+    "secret",
 ]
 
-# Exact-match column names that are PII (case-insensitive)
-PII_EXACT_NAMES: List[str] = [
-    "id",
+# SOFT PII: Only removed if column is string-type AND name exactly matches
+SOFT_PII_EXACT_NAMES: List[str] = [
     "name",
-    "ssn",
+    "first_name",
+    "last_name",
+    "full_name",
+    "surname",
+    "person_name",
+    "patient_name",
+    "user_name",
+    "username",
     "email",
+    "email_address",
+    "e_mail",
     "phone",
+    "phone_number",
+    "telephone",
+    "mobile",
+    "address",
+    "street",
+    "ip_address",
 ]
 
 # Maximum unique-value ratio for a column to be considered categorical
@@ -81,18 +86,31 @@ class PreprocessorError(Exception):
 # Helper functions
 # ---------------------------------------------------------------------------
 
-def _is_pii_column(column_name: str) -> bool:
-    """Return True if the column name looks like PII."""
+def _is_pii_column(column_name: str, series: Optional["pd.Series"] = None) -> bool:
+    """
+    Return True if the column name looks like PII.
+
+    Uses a two-tier approach:
+    - STRICT PII (SSN, credit card, etc.): always removed
+    - SOFT PII (name, email, phone): only removed if column is string-type
+      and the normalized name exactly matches a known PII identifier.
+
+    Columns like 'id', 'patient_id', 'age', 'bmi', 'outcome' are NEVER removed.
+    """
     normalized = column_name.strip().lower().replace(" ", "_").replace("-", "_")
 
-    # Exact match
-    if normalized in PII_EXACT_NAMES:
-        return True
-
-    # Substring / pattern match
-    for pattern in PII_PATTERNS:
+    # Strict PII: substring match — these are always dangerous
+    for pattern in STRICT_PII_PATTERNS:
         if pattern in normalized:
             return True
+
+    # Soft PII: exact match only, and only for string columns
+    if normalized in SOFT_PII_EXACT_NAMES:
+        # If we have the series, only flag it if it's a string/object column
+        if series is not None:
+            return series.dtype == object or pd.api.types.is_string_dtype(series)
+        # Without series data, conservatively flag it
+        return True
 
     return False
 
@@ -337,7 +355,7 @@ class DataPreprocessor:
         """Identify and drop PII columns."""
         removed: List[str] = []
         for col in df.columns:
-            if _is_pii_column(col):
+            if _is_pii_column(col, df[col]):
                 removed.append(col)
         return df.drop(columns=removed), removed
 

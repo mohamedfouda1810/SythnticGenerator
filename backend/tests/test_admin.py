@@ -10,20 +10,16 @@ from sqlalchemy import select
 
 from backend.models import User, UserRole
 from backend.services.auth_service import hash_password
+from backend.tests.conftest import register_and_verify, test_session_factory
 
 
 # ─── Helpers ──────────────────────────────────────────────────────
 
-async def create_admin(client: AsyncClient, db_override=None):
-    """Register a user then promote to admin via direct DB access."""
-    await client.post("/api/auth/register", json={
-        "username": "admin",
-        "email": "admin@example.com",
-        "password": "Admin1234!",
-        "confirm_password": "Admin1234!",
-    })
+async def create_admin(client: AsyncClient):
+    """Register a user, verify email, promote to admin via DB, then login."""
+    await register_and_verify(client, "admin", "admin@example.com", "Admin1234!")
+
     # Promote to admin via the test DB
-    from backend.tests.conftest import test_session_factory
     async with test_session_factory() as session:
         result = await session.execute(select(User).where(User.email == "admin@example.com"))
         user = result.scalar_one()
@@ -38,12 +34,8 @@ async def create_admin(client: AsyncClient, db_override=None):
 
 
 async def create_regular_user(client: AsyncClient, username="user1", email="user1@example.com"):
-    await client.post("/api/auth/register", json={
-        "username": username,
-        "email": email,
-        "password": "User1234!",
-        "confirm_password": "User1234!",
-    })
+    """Register + verify + login a regular user, return login response data."""
+    await register_and_verify(client, username, email, "User1234!")
     resp = await client.post("/api/auth/login", json={
         "email": email,
         "password": "User1234!",

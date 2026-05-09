@@ -51,6 +51,15 @@
   --duration-fast: 150ms;
   --duration-normal: 300ms;
   --duration-slow: 500ms;
+
+  /* Z-index scale */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-navbar: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-overlay: 600;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -78,6 +87,12 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 code, pre, .font-mono {
@@ -247,6 +262,66 @@ code, pre, .font-mono {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   RANGE SLIDER
+   ═══════════════════════════════════════════════════════════ */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 16px rgba(108, 99, 255, 0.6);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.4);
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+
+.form-input {
+  width: 100%;
+  padding: 0 16px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color var(--duration-fast) var(--ease-smooth);
+}
+
+.form-input:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════
    REDUCED MOTION
    ═══════════════════════════════════════════════════════════ */
 
@@ -258,4 +333,25 @@ code, pre, .font-mono {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE LAYOUT UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+
+.page-wrapper {
+  padding-top: 72px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.section {
+  padding: 80px 0;
 }

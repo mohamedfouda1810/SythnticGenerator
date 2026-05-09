@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Trash2, ExternalLink, Brain, Wand2 } from 'lucide-react';
 import StatusBadge from '../ui/StatusBadge';
 import { formatDate, formatNumber, formatScore, getScoreColor } from '../../utils/formatters';
@@ -13,6 +14,7 @@ const rowVariants = {
 };
 
 export default function HistoryTable({ jobs, onDelete, loading }) {
+  const navigate = useNavigate();
   if (loading) {
     return (
       <div className="space-y-3">
@@ -71,7 +73,8 @@ export default function HistoryTable({ jobs, onDelete, loading }) {
           variants={rowVariants}
           initial="hidden"
           animate="visible"
-          className="group grid grid-cols-1 md:grid-cols-[1fr_100px_100px_100px_140px_80px_50px] gap-4 px-5 py-4 border-b border-[var(--border-default)] last:border-b-0 hover:bg-[var(--bg-tertiary)]/50 transition-colors items-center relative overflow-hidden"
+          onClick={() => navigate(`/history/${job.id}`)}
+          className="group grid grid-cols-1 md:grid-cols-[1fr_100px_100px_100px_140px_80px_50px] gap-4 px-5 py-4 border-b border-[var(--border-default)] last:border-b-0 hover:bg-[var(--bg-tertiary)]/50 transition-colors items-center relative overflow-hidden cursor-pointer"
         >
           {/* Hover highlight */}
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -133,12 +136,12 @@ export default function HistoryTable({ jobs, onDelete, loading }) {
             )}
           </div>
 
-          {/* Delete */}
-          <div className="relative z-10">
+          {/* Actions */}
+          <div className="relative z-10 flex items-center gap-1">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => onDelete(job.id)}
+              onClick={(e) => { e.stopPropagation(); onDelete(job.id); }}
               className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--accent-error)] hover:bg-[var(--accent-error)]/10 transition-colors opacity-0 group-hover:opacity-100"
             >
               <Trash2 size={14} />

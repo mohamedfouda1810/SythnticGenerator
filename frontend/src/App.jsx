@@ -10,11 +10,14 @@ import { ProtectedRoute, AdminRoute, GuestRoute } from './router/ProtectedRoute'
 import HomePage from './pages/HomePage';
 import GeneratePage from './pages/GeneratePage';
 import HistoryPage from './pages/HistoryPage';
+import JobDetailPage from './pages/JobDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
+import EmailNotVerifiedPage from './pages/auth/EmailNotVerifiedPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 function AppRoutes() {
@@ -32,9 +35,14 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
 
+        {/* Email verification (public) */}
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/verify-pending" element={<EmailNotVerifiedPage />} />
+
         {/* Protected */}
         <Route path="/generate" element={<GeneratePage />} />
         <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+        <Route path="/history/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
         {/* Admin */}

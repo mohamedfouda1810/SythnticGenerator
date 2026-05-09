@@ -26,7 +26,12 @@ export default function LoginPage() {
     setLoading(false);
 
     if (err) {
-      setError(err);
+      // Check for email_not_verified structured error
+      if (typeof err === 'object' && err.error === 'email_not_verified') {
+        navigate(`/verify-pending?email=${encodeURIComponent(err.email || email)}`);
+        return;
+      }
+      setError(typeof err === 'string' ? err : 'Login failed');
       return;
     }
 
@@ -36,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex pt-16">
       {/* Left — illustration */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden">
         <ParticleBackground />

@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
@@ -59,7 +59,17 @@ class User(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Avatar: URL fallback + binary storage
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    avatar_data: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
+    avatar_mime: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
+    # Email verification
+    is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    email_verification_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    email_verification_expires: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
@@ -81,7 +91,8 @@ class User(Base):
             "role": self.role,
             "is_active": self.is_active,
             "is_blocked": self.is_blocked,
-            "avatar_url": self.avatar_url,
+            "avatar_url": self.avatar_url or (f"/api/profile/avatar/{self.id}" if self.avatar_data else None),
+            "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "last_login": self.last_login.isoformat() if self.last_login else None,
         }
@@ -92,7 +103,8 @@ class User(Base):
             "username": self.username,
             "email": self.email,
             "role": self.role,
-            "avatar_url": self.avatar_url,
+            "avatar_url": self.avatar_url or (f"/api/profile/avatar/{self.id}" if self.avatar_data else None),
+            "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "last_login": self.last_login.isoformat() if self.last_login else None,
         }
@@ -158,6 +170,13 @@ class GenerationJob(Base):
     error_message: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )
+
+    # New metadata columns
+    download_token: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    generation_time_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    columns_generated: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON list
+    synthetic_data_sample: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON first 20 rows
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
@@ -169,6 +188,7 @@ class GenerationJob(Base):
 
     def to_dict(self) -> dict:
         """Serialize to dictionary."""
+        import json as _json
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -177,10 +197,14 @@ class GenerationJob(Base):
             "num_rows_requested": self.num_rows_requested,
             "num_rows_generated": self.num_rows_generated,
             "file_name": self.file_name,
-            "schema_used": self.schema_used,
+            "schema_used": _json.loads(self.schema_used) if self.schema_used else None,
             "quality_score": self.quality_score,
-            "quality_metrics": self.quality_metrics,
+            "quality_metrics": _json.loads(self.quality_metrics) if self.quality_metrics else None,
             "error_message": self.error_message,
+            "download_token": self.download_token,
+            "generation_time_seconds": self.generation_time_seconds,
+            "columns_generated": _json.loads(self.columns_generated) if self.columns_generated else None,
+            "synthetic_data_sample": _json.loads(self.synthetic_data_sample) if self.synthetic_data_sample else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }

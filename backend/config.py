@@ -45,6 +45,17 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_HOURS: int = 24
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Email (empty = console mode, no real email sent)
+    MAIL_USERNAME: str = ""
+    MAIL_PASSWORD: str = ""
+    MAIL_FROM: str = "synthgen@localhost"
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = ""
+    MAIL_USE_TLS: bool = True
+
+    # Frontend URL (for email verification links)
+    FRONTEND_URL: str = "http://localhost:3000"
+
     @property
     def max_file_size_bytes(self) -> int:
         """Return max file size in bytes."""

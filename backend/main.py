@@ -31,6 +31,11 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     await create_all_tables()
     logger.info("Database tables created.")
+
+    # Auto-seed admin accounts on first startup
+    from backend.seed_admins import auto_seed_if_no_admins
+    await auto_seed_if_no_admins()
+
     yield
     logger.info("Shutting down.")
 

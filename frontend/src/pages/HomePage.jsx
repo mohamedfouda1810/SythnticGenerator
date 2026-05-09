@@ -93,11 +93,14 @@ export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
 
   return (
-    <div className="relative">
-      <ParticleBackground />
+    <div className="relative" style={{ position: 'relative' }}>
 
       {/* ─── HERO ───────────────────────────────────────── */}
-      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pt-16">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-16 overflow-hidden">
+        {/* Particles scoped to hero only */}
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+          <ParticleBackground />
+        </div>
         <motion.div variants={stagger} initial="hidden" animate="show" className="text-center max-w-3xl mx-auto">
           <motion.div variants={fadeUp} className="flex justify-center mb-8">
             <motion.div
@@ -156,7 +159,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── STATS BAR ──────────────────────────────────── */}
-      <section className="relative z-10 py-16 px-6">
+      <section className="relative py-16 px-6" style={{ zIndex: 1 }}>
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((s, i) => (
             <motion.div
@@ -178,7 +181,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── HOW IT WORKS ───────────────────────────────── */}
-      <section className="relative z-10 py-20 px-6">
+      <section className="relative py-20 px-6" style={{ zIndex: 1 }}>
         <SectionTitle title="How It Works" subtitle="Get synthetic data in three simple steps" />
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 relative">
@@ -214,7 +217,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FEATURES ───────────────────────────────────── */}
-      <section id="features" className="relative z-10 py-20 px-6">
+      <section id="features" className="relative py-20 px-6" style={{ zIndex: 1 }}>
         <SectionTitle title="Powerful Features" subtitle="Everything you need for synthetic data generation" />
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
@@ -246,7 +249,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── COMPARISON TABLE ───────────────────────────── */}
-      <section className="relative z-10 py-20 px-6">
+      <section className="relative py-20 px-6" style={{ zIndex: 1 }}>
         <SectionTitle title="Why Choose Us?" subtitle="See how SynthGen compares to the competition" />
         <div className="max-w-4xl mx-auto">
           <div className="rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-default)] overflow-hidden">
@@ -298,7 +301,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── CTA BANNER ─────────────────────────────────── */}
-      <section className="relative z-10 py-20 px-6">
+      <section className="relative py-20 px-6" style={{ zIndex: 1 }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -337,7 +340,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FOOTER ─────────────────────────────────────── */}
-      <footer className="relative z-10 border-t border-[var(--border-default)] py-12 px-6">
+      <footer className="relative border-t border-[var(--border-default)] py-12 px-6" style={{ zIndex: 1 }}>
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>

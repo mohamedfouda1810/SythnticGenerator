@@ -15,8 +15,9 @@ export default function ParticleBackground() {
     const MOUSE_RADIUS = 200;
 
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const parent = canvas.parentElement;
+      canvas.width = parent?.clientWidth || window.innerWidth;
+      canvas.height = parent?.clientHeight || window.innerHeight;
     }
     resize();
     window.addEventListener('resize', resize);
@@ -114,8 +115,8 @@ export default function ParticleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 z-0 pointer-events-none"
-      style={{ opacity: 0.6 }}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: 0.6, zIndex: 0 }}
     />
   );
 }

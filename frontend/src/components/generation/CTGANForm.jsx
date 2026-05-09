@@ -5,6 +5,34 @@ import { Upload, FileSpreadsheet, X, Zap, Settings } from 'lucide-react';
 import AnimatedButton from '../ui/AnimatedButton';
 import { formatFileSize } from '../../utils/formatters';
 
+function SliderInput({ label, value, onChange, min, max, step = 1, hint }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-sm text-[var(--text-secondary)]">{label}</label>
+        <span className="text-lg font-bold font-mono text-[var(--accent-primary)]">{value.toLocaleString()}</span>
+      </div>
+      <input
+        type="range"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        min={min}
+        max={max}
+        step={step}
+        className="w-full h-2 rounded-full appearance-none bg-[var(--bg-tertiary)] cursor-pointer accent-[var(--accent-primary)]"
+        style={{
+          background: `linear-gradient(to right, var(--accent-primary) ${((value - min) / (max - min)) * 100}%, var(--bg-tertiary) ${((value - min) / (max - min)) * 100}%)`,
+        }}
+      />
+      <div className="flex justify-between mt-1">
+        <span className="text-[10px] text-[var(--text-tertiary)]">{min.toLocaleString()}</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">{hint}</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">{max.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function CTGANForm({ onSubmit, isGenerating }) {
   const [file, setFile] = useState(null);
   const [numRows, setNumRows] = useState(1000);
@@ -111,41 +139,31 @@ export default function CTGANForm({ onSubmit, isGenerating }) {
         transition={{ delay: 0.2 }}
         className="bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-2xl p-6"
       >
-        <div className="flex items-center gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-6">
           <Settings size={18} className="text-[var(--accent-primary)]" />
           <h3 className="font-semibold">Generation Parameters</h3>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
-              Number of Rows
-            </label>
-            <input
-              type="number"
-              value={numRows}
-              onChange={(e) => setNumRows(Math.max(1, Math.min(50000, parseInt(e.target.value) || 1)))}
-              min={1}
-              max={50000}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none transition-colors font-mono"
-            />
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">1 – 50,000 rows</p>
-          </div>
+        <div className="space-y-8">
+          <SliderInput
+            label="Number of Rows"
+            value={numRows}
+            onChange={setNumRows}
+            min={100}
+            max={50000}
+            step={100}
+            hint="More rows = more data"
+          />
 
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
-              Training Epochs
-            </label>
-            <input
-              type="number"
-              value={epochs}
-              onChange={(e) => setEpochs(Math.max(1, Math.min(1000, parseInt(e.target.value) || 1)))}
-              min={1}
-              max={1000}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none transition-colors font-mono"
-            />
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">More = higher quality, slower</p>
-          </div>
+          <SliderInput
+            label="Training Epochs"
+            value={epochs}
+            onChange={setEpochs}
+            min={10}
+            max={500}
+            step={10}
+            hint="More = better quality, slower"
+          />
         </div>
       </motion.div>
 

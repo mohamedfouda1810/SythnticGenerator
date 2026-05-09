@@ -9,8 +9,11 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
+import pandas as pd
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
@@ -62,11 +65,6 @@ async def generate_ctgan(
 ) -> Dict[str, Any]:
     """
     Generate synthetic data using CTGAN from an uploaded CSV/XLSX file.
-
-    Accepts multipart/form-data with:
-    - file: CSV or XLSX file
-    - num_rows: number of synthetic rows to generate
-    - epochs: CTGAN training epochs (default from settings)
     """
     epochs = epochs or settings.DEFAULT_EPOCHS
 
@@ -108,17 +106,28 @@ async def generate_ctgan(
     job_id = job.id
 
     try:
+        start_time = time.time()
+
         # Read uploaded file into DataFrame
         real_df = ctgan_service.read_uploaded_file(file_bytes, file.filename)
 
         # Run full pipeline: preprocess → train CTGAN → evaluate
         result = ctgan_service.run_ctgan_pipeline(real_df, num_rows, epochs)
 
+        elapsed = round(time.time() - start_time, 2)
+
         # Update job with results
         job.status = JobStatus.COMPLETED
         job.num_rows_generated = result["num_rows_generated"]
         job.quality_score = result["quality_score"]
         job.quality_metrics = json.dumps(result["quality_metrics"])
+        job.download_token = result["download_token"]
+        job.generation_time_seconds = elapsed
+        job.columns_generated = json.dumps(result["columns"])
+        job.synthetic_data_sample = json.dumps(
+            result["synthetic_df"].head(20).to_dict(orient="records"),
+            default=str,
+        )
         job.completed_at = datetime.now(timezone.utc)
 
         await log_activity(
@@ -135,7 +144,9 @@ async def generate_ctgan(
             "columns": result["columns"],
             "num_rows_generated": result["num_rows_generated"],
             "quality_metrics": result["quality_metrics"],
+            "quality_score": result["quality_score"],
             "download_token": result["download_token"],
+            "generation_time_seconds": elapsed,
         }
 
     except Exception as exc:
@@ -165,8 +176,6 @@ async def generate_mimesis(
 ) -> Dict[str, Any]:
     """
     Generate synthetic data using Mimesis from a schema definition.
-
-    Body: {"schema": {"col": {"type": "name", "options": {}}}, "num_rows": 1000}
     """
     # Convert Pydantic models to plain dicts for service layer
     schema = {
@@ -201,10 +210,23 @@ async def generate_mimesis(
     job_id = job.id
 
     try:
+        start_time = time.time()
+
         result = mimesis_service.run_mimesis_pipeline(schema, num_rows, locale)
+
+        elapsed = round(time.time() - start_time, 2)
 
         job.status = JobStatus.COMPLETED
         job.num_rows_generated = result["num_rows_generated"]
+        job.quality_score = result["quality_score"]
+        job.quality_metrics = json.dumps(result["quality_metrics"])
+        job.download_token = result["download_token"]
+        job.generation_time_seconds = elapsed
+        job.columns_generated = json.dumps(result["columns"])
+        job.synthetic_data_sample = json.dumps(
+            result["synthetic_df"].head(20).to_dict(orient="records"),
+            default=str,
+        )
         job.completed_at = datetime.now(timezone.utc)
 
         await log_activity(
@@ -220,7 +242,10 @@ async def generate_mimesis(
             "synthetic_data": result["preview"],
             "columns": result["columns"],
             "num_rows_generated": result["num_rows_generated"],
+            "quality_metrics": result["quality_metrics"],
+            "quality_score": result["quality_score"],
             "download_token": result["download_token"],
+            "generation_time_seconds": elapsed,
         }
 
     except Exception as exc:
@@ -242,13 +267,34 @@ async def generate_mimesis(
 # ---------------------------------------------------------------------------
 
 @router.get("/download/{download_token}")
-async def download_synthetic_data(download_token: str) -> StreamingResponse:
-    """Download generated synthetic data as CSV."""
+async def download_synthetic_data(
+    download_token: str,
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """Download generated synthetic data as CSV. Falls back to DB if in-memory expired."""
+    import io as _io
+    from sqlalchemy import select as _select
+
+    # Try in-memory store first (fast path)
     df = ctgan_service.get_stored_result(download_token)
+
+    # Fallback: reconstruct from DB sample data
     if df is None:
+        result = await db.execute(
+            _select(GenerationJob).where(GenerationJob.download_token == download_token)
+        )
+        job = result.scalar_one_or_none()
+        if job and job.synthetic_data_sample:
+            try:
+                sample_data = json.loads(job.synthetic_data_sample)
+                df = pd.DataFrame(sample_data)
+            except Exception:
+                pass
+
+    if df is None or df.empty:
         raise HTTPException(
             status_code=404,
-            detail="Download token not found or expired (results expire after 1 hour).",
+            detail="Download token not found or expired.",
         )
 
     csv_buffer = df.to_csv(index=False)
@@ -260,6 +306,35 @@ async def download_synthetic_data(download_token: str) -> StreamingResponse:
             "Content-Disposition": f"attachment; filename=synthetic_data_{download_token[:8]}.csv"
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/generate/mimesis/preview
+# ---------------------------------------------------------------------------
+
+@router.post("/mimesis/preview")
+async def preview_mimesis(
+    body: MimesisGenerateRequest,
+) -> Dict[str, Any]:
+    """Generate 3 sample rows from a schema for live preview."""
+    schema = {
+        col: {"type": spec.type, "options": spec.options}
+        for col, spec in body.schema_.items()
+    }
+
+    errors = mimesis_service.validate_schema(schema)
+    if errors:
+        raise HTTPException(status_code=422, detail={"validation_errors": errors})
+
+    try:
+        generator = mimesis_service.MimesisGenerator(locale=body.locale)
+        sample_df = generator.generate(schema=schema, num_rows=min(body.num_rows, 3))
+        return {
+            "preview": sample_df.head(3).to_dict(orient="records"),
+            "columns": list(sample_df.columns),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Preview failed: {exc}")
 
 
 # ---------------------------------------------------------------------------

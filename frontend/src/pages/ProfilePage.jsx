@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Shield, Trash2, Lock, Save, BarChart3, Clock, Zap, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Shield, Trash2, Lock, Save, BarChart3, Clock, Zap, Activity, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
 import { getProfile, updateProfile, changePassword, deleteAccount } from '../services/api';
-import Avatar from '../components/ui/Avatar';
+import AvatarUpload from '../components/ui/AvatarUpload';
 import AnimatedButton from '../components/ui/AnimatedButton';
-import ConfirmModal from '../components/ui/ConfirmModal';
 
 const TABS = [
   { id: 'stats', label: 'My Stats', icon: BarChart3 },
@@ -37,17 +37,23 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-12 px-4">
+    <div className="min-h-screen pt-24 pb-12 px-6">
       <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
           {/* Left — Profile Card */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-1 p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-default)]"
+            className="p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-default)] lg:sticky lg:top-24 lg:self-start"
           >
             <div className="text-center">
-              <Avatar name={user?.username} url={user?.avatar_url} size="xl" className="mx-auto mb-4" />
+              <div className="flex justify-center mb-4">
+                <AvatarUpload
+                  currentAvatar={user?.avatar_url}
+                  username={user?.username}
+                  size={120}
+                />
+              </div>
               <h2 className="text-xl font-bold">{user?.username}</h2>
               <p className="text-[var(--text-secondary)] text-sm">{user?.email}</p>
               <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
@@ -76,7 +82,7 @@ export default function ProfilePage() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-default)]"
+            className="rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-default)]"
           >
             {/* Tab bar */}
             <div className="flex border-b border-[var(--border-default)] overflow-x-auto">
@@ -125,11 +131,11 @@ function StatsTab({ profile }) {
             key={s.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)]"
+            transition={{ delay: i * 0.05 }}
+            className="p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-default)]"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${s.color} 15%, transparent)` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `color-mix(in srgb, ${s.color} 15%, transparent)` }}>
                 <s.icon size={20} style={{ color: s.color }} />
               </div>
               <div>
@@ -146,12 +152,11 @@ function StatsTab({ profile }) {
 
 function EditTab({ user, updateUser }) {
   const [username, setUsername] = useState(user?.username || '');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
-    const { data, error } = await updateProfile({ username, avatar_url: avatarUrl || null });
+    const { data, error } = await updateProfile({ username });
     setSaving(false);
     if (error) { toast.error(error); return; }
     updateUser(data);
@@ -162,15 +167,11 @@ function EditTab({ user, updateUser }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5 max-w-md">
       <div>
         <label className="block text-sm text-[var(--text-secondary)] mb-1.5">Username</label>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
+        <input value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-3 h-12 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
       </div>
       <div>
         <label className="block text-sm text-[var(--text-secondary)] mb-1.5">Email</label>
-        <input value={user?.email || ''} readOnly className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-tertiary)] opacity-60 cursor-not-allowed" />
-      </div>
-      <div>
-        <label className="block text-sm text-[var(--text-secondary)] mb-1.5">Avatar URL</label>
-        <input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
+        <input value={user?.email || ''} readOnly className="w-full px-4 py-3 h-12 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-tertiary)] opacity-60 cursor-not-allowed" />
       </div>
       <AnimatedButton onClick={handleSave} loading={saving} icon={Save}>Save Changes</AnimatedButton>
     </motion.div>
@@ -194,55 +195,80 @@ function SecurityTab() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5 max-w-md">
-      <div>
-        <label className="block text-sm text-[var(--text-secondary)] mb-1.5">Current Password</label>
-        <input type="password" value={form.current_password} onChange={set('current_password')} className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
-      </div>
-      <div>
-        <label className="block text-sm text-[var(--text-secondary)] mb-1.5">New Password</label>
-        <input type="password" value={form.new_password} onChange={set('new_password')} className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
-      </div>
-      <div>
-        <label className="block text-sm text-[var(--text-secondary)] mb-1.5">Confirm Password</label>
-        <input type="password" value={form.confirm_password} onChange={set('confirm_password')} className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
-      </div>
+      {[
+        ['Current Password', 'current_password'],
+        ['New Password', 'new_password'],
+        ['Confirm Password', 'confirm_password'],
+      ].map(([label, key]) => (
+        <div key={key}>
+          <label className="block text-sm text-[var(--text-secondary)] mb-1.5">{label}</label>
+          <input type="password" value={form[key]} onChange={set(key)} className="w-full px-4 py-3 h-12 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none" />
+        </div>
+      ))}
       <AnimatedButton onClick={handleSubmit} loading={saving} icon={Lock}>Update Password</AnimatedButton>
     </motion.div>
   );
 }
 
 function DangerTab({ logout }) {
+  const navigate = useNavigate();
+  const [password, setPassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleDelete = async () => {
-    const { error } = await deleteAccount();
+    if (!password.trim()) { toast.error('Please enter your password'); return; }
+    setIsDeleting(true);
+    const { error } = await deleteAccount(password);
+    setIsDeleting(false);
     if (error) { toast.error(error); return; }
-    toast.success('Account deactivated');
+    toast.success('Account deleted. You can register again anytime.');
     logout();
+    navigate('/register');
   };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <div className="p-4 rounded-xl border-2 border-[var(--accent-error)]/30 bg-[var(--accent-error)]/5">
-        <h3 className="text-lg font-semibold text-[var(--accent-error)] mb-2">Delete Account</h3>
+      <div className="p-6 rounded-2xl border-2 border-[var(--accent-error)]/30 bg-[var(--accent-error)]/5">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle size={20} className="text-[var(--accent-error)]" />
+          <h3 className="text-lg font-semibold text-[var(--accent-error)]">Delete Account</h3>
+        </div>
         <p className="text-sm text-[var(--text-secondary)] mb-4">
-          Once you delete your account, there is no going back. All your data and generation history will be lost.
+          This action is <strong className="text-[var(--accent-error)]">permanent</strong>.
+          All your data, generation history, and profile will be permanently deleted.
+          You can register again with the same email afterward.
         </p>
-        <AnimatedButton variant="danger" onClick={() => setShowConfirm(true)} icon={Trash2}>
-          Delete My Account
-        </AnimatedButton>
-      </div>
 
-      <ConfirmModal
-        isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handleDelete}
-        title="Delete Account"
-        description="This will permanently deactivate your account. You will no longer be able to log in."
-        confirmText="Delete"
-        destructive
-        requireType
-      />
+        {!showConfirm ? (
+          <AnimatedButton variant="danger" onClick={() => setShowConfirm(true)} icon={Trash2}>
+            Delete My Account
+          </AnimatedButton>
+        ) : (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4">
+            <div>
+              <label className="block text-sm text-[var(--accent-error)] mb-1.5">
+                Enter your password to confirm deletion
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                className="w-full max-w-sm px-4 py-3 h-12 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--accent-error)]/30 text-[var(--text-primary)] focus:border-[var(--accent-error)] focus:outline-none"
+              />
+            </div>
+            <div className="flex gap-3">
+              <AnimatedButton variant="danger" onClick={handleDelete} loading={isDeleting} icon={Trash2}>
+                Permanently Delete
+              </AnimatedButton>
+              <AnimatedButton variant="secondary" onClick={() => { setShowConfirm(false); setPassword(''); }}>
+                Cancel
+              </AnimatedButton>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   );
 }

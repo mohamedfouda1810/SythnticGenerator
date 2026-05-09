@@ -43,7 +43,8 @@ export default function Navbar() {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-      className="fixed top-0 left-0 right-0 z-50 glass-strong"
+      className="fixed top-0 left-0 right-0 glass-strong"
+      style={{ zIndex: 'var(--z-navbar)', borderBottom: '1px solid rgba(108, 99, 255, 0.15)' }}
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}

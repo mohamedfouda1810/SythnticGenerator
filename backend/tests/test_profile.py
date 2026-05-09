@@ -7,21 +7,12 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
+from backend.tests.conftest import get_auth_header, register_and_verify
+
 
 async def setup_user(client: AsyncClient):
-    """Register and login, return auth headers."""
-    await client.post("/api/auth/register", json={
-        "username": "profileuser",
-        "email": "profile@example.com",
-        "password": "Profile1234!",
-        "confirm_password": "Profile1234!",
-    })
-    resp = await client.post("/api/auth/login", json={
-        "email": "profile@example.com",
-        "password": "Profile1234!",
-    })
-    token = resp.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    """Register, verify, and login, return auth headers."""
+    return await get_auth_header(client, "profileuser", "profile@example.com", "Profile1234!")
 
 
 @pytest.mark.asyncio
@@ -49,12 +40,7 @@ async def test_update_profile(client: AsyncClient):
 async def test_update_profile_duplicate_username(client: AsyncClient):
     headers = await setup_user(client)
     # Create second user
-    await client.post("/api/auth/register", json={
-        "username": "taken",
-        "email": "taken@example.com",
-        "password": "Taken1234!",
-        "confirm_password": "Taken1234!",
-    })
+    await register_and_verify(client, "taken", "taken@example.com", "Taken1234!")
     resp = await client.patch("/api/profile", headers=headers, json={
         "username": "taken",
     })
@@ -92,13 +78,38 @@ async def test_change_password_wrong_current(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_delete_account(client: AsyncClient):
+    """Hard delete: password confirmation required, re-registration works."""
     headers = await setup_user(client)
-    resp = await client.delete("/api/profile", headers=headers)
+    resp = await client.request(
+        "DELETE", "/api/profile", headers=headers,
+        json={"password": "Profile1234!"},
+    )
     assert resp.status_code == 200
+    assert "permanently deleted" in resp.json()["message"]
 
-    # Cannot login after deactivation
+    # Cannot login after deletion
     resp2 = await client.post("/api/auth/login", json={
         "email": "profile@example.com",
         "password": "Profile1234!",
     })
     assert resp2.status_code == 401
+
+    # Re-registration with same email works
+    resp3 = await client.post("/api/auth/register", json={
+        "username": "profileuser2",
+        "email": "profile@example.com",
+        "password": "Profile1234!",
+        "confirm_password": "Profile1234!",
+    })
+    assert resp3.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_delete_account_wrong_password(client: AsyncClient):
+    """Delete should fail with wrong password."""
+    headers = await setup_user(client)
+    resp = await client.request(
+        "DELETE", "/api/profile", headers=headers,
+        json={"password": "WrongPassword!"},
+    )
+    assert resp.status_code == 400

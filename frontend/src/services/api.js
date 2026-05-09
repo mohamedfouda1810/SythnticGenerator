@@ -28,8 +28,21 @@ async function request(url, options = {}) {
     }
 
     if (response.status === 403) {
-      toast.error('Access denied');
-      return { data: null, error: 'Forbidden' };
+      const errorData = await response.json().catch(() => ({}));
+      const detail = errorData.detail;
+      // Check if this is an email_not_verified error (structured detail)
+      if (detail && typeof detail === 'object' && detail.error === 'email_not_verified') {
+        return { data: null, error: detail };
+      }
+      toast.error(typeof detail === 'string' ? detail : 'Access denied');
+      return { data: null, error: typeof detail === 'string' ? detail : 'Forbidden' };
+    }
+
+    // 409 Conflict — return error locally (no toast) so forms can show field-specific messages
+    if (response.status === 409) {
+      const errorData = await response.json().catch(() => ({}));
+      const detail = typeof errorData.detail === 'string' ? errorData.detail : 'Already exists';
+      return { data: null, error: detail };
     }
 
     if (!response.ok) {
@@ -99,6 +112,17 @@ export async function refreshTokenApi(refreshToken) {
   });
 }
 
+export async function verifyEmail(token) {
+  return request(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+}
+
+export async function resendVerification(email) {
+  return request('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
 // ─── Profile ──────────────────────────────────────────────────
 
 export async function getProfile() {
@@ -119,8 +143,36 @@ export async function changePassword(data) {
   });
 }
 
-export async function deleteAccount() {
-  return request('/profile', { method: 'DELETE' });
+export async function deleteAccount(password) {
+  return request('/profile', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function uploadAvatar(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const token = getToken();
+  const headers = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const response = await fetch(`${BASE_URL}/profile/avatar`, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      return { data: null, error: err.detail || 'Upload failed' };
+    }
+    const data = await response.json();
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err.message || 'Upload failed' };
+  }
 }
 
 // ─── Generation ───────────────────────────────────────────────
@@ -156,6 +208,13 @@ export async function generateMimesis(schema, numRows, locale = 'en') {
   return request('/generate/mimesis', {
     method: 'POST',
     body: JSON.stringify({ schema, num_rows: numRows, locale }),
+  });
+}
+
+export async function previewMimesis(schema, locale = 'en') {
+  return request('/generate/mimesis/preview', {
+    method: 'POST',
+    body: JSON.stringify({ schema, num_rows: 3, locale }),
   });
 }
 
