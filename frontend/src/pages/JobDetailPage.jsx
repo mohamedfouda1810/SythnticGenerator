@@ -230,7 +230,7 @@ export default function JobDetailPage() {
                     </div>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {job.quality_metrics.column_metrics.map((m, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs p-2 rounded-lg bg-[var(--bg-tertiary)]">
+                        <div key={m.column || i} className="flex items-center justify-between text-xs p-2 rounded-lg bg-[var(--bg-tertiary)]">
                           <span className="font-mono text-[var(--text-secondary)]">{m.column}</span>
                           <span className="font-mono" style={{ color: m.score >= 0.8 ? 'var(--accent-success)' : m.score >= 0.5 ? 'var(--accent-warning)' : 'var(--accent-error)' }}>
                             {(m.score * 100).toFixed(0)}%

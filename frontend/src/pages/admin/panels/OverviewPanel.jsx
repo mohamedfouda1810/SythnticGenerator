@@ -84,8 +84,8 @@ export default function OverviewPanel() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {pieData.map((_, idx) => (
-                      <Cell key={idx} fill={idx === 0 ? '#A855F7' : '#00D4FF'} />
+                    {pieData.map((entry, idx) => (
+                      <Cell key={entry.name} fill={idx === 0 ? '#A855F7' : '#00D4FF'} />
                     ))}
                   </Pie>
                   <Tooltip

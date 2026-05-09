@@ -269,9 +269,10 @@ async def generate_mimesis(
 @router.get("/download/{download_token}")
 async def download_synthetic_data(
     download_token: str,
+    format: str = "csv",
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
-    """Download generated synthetic data as CSV. Falls back to DB if in-memory expired."""
+    """Download generated synthetic data as CSV or XLSX. Falls back to DB if in-memory expired."""
     import io as _io
     from sqlalchemy import select as _select
 
@@ -297,13 +298,27 @@ async def download_synthetic_data(
             detail="Download token not found or expired.",
         )
 
-    csv_buffer = df.to_csv(index=False)
+    fname_base = f"synthetic_data_{download_token[:8]}"
 
+    if format.lower() == "xlsx":
+        output = _io.BytesIO()
+        df.to_excel(output, index=False, engine="openpyxl")
+        output.seek(0)
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f'attachment; filename="{fname_base}.xlsx"'
+            },
+        )
+
+    # Default: CSV
+    csv_buffer = df.to_csv(index=False)
     return StreamingResponse(
         iter([csv_buffer]),
         media_type="text/csv",
         headers={
-            "Content-Disposition": f"attachment; filename=synthetic_data_{download_token[:8]}.csv"
+            "Content-Disposition": f'attachment; filename="{fname_base}.csv"'
         },
     )
 

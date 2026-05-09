@@ -270,6 +270,28 @@ export default function GeneratingAnimation({ status, mode }) {
             <Loader2 size={14} className="animate-spin" />
             Please wait...
           </motion.div>
+
+          {/* Time estimate (CTGAN training phase) */}
+          {mode === 'ctgan' && status === 'training' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-3 space-y-2"
+            >
+              <p className="text-xs text-[var(--text-tertiary)]">
+                ⚡ Training {epoch} epochs — this may take a few minutes
+              </p>
+              <div className="w-48 mx-auto h-1 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)]"
+                  style={{ originX: 0 }}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 120, ease: 'linear' }}
+                />
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Animated Stats (CTGAN only) */}
