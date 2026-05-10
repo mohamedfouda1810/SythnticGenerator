@@ -235,7 +235,12 @@ export default function GeneratingAnimation({ status, mode }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-primary)]/95 backdrop-blur-md"
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ 
+        zIndex: 600,
+        background: 'rgba(10,10,15,0.95)',
+        backdropBlur: '12px'
+      }}
     >
       {/* Matrix rain background (subtle) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

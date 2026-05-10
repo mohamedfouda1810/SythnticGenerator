@@ -77,7 +77,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex pt-16">
+    <div className="page-content flex pt-16">
       {/* Left — illustration */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden">
         <ParticleBackground />

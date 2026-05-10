@@ -9,7 +9,15 @@ from sqlalchemy.orm import DeclarativeBase
 
 from backend.config import settings
 
-engine = create_async_engine(settings.DATABASE_URL, echo=False)
+# Engine configuration: Use pooling for PostgreSQL, but avoid it for SQLite in-memory/file if needed.
+# create_async_engine handles the driver automatically based on settings.DATABASE_URL.
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,  # Check connection health before use
+    pool_size=10,        # Max connections in pool
+    max_overflow=20,     # Extra connections during bursts
+)
 
 async_session_factory = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False

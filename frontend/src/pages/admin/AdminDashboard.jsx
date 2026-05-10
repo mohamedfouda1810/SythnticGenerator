@@ -20,17 +20,27 @@ export default function AdminDashboard() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen pt-16 flex">
+    <div className="flex" style={{ minHeight: '100vh', paddingTop: '64px' }}>
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -240 }}
         animate={{ x: 0 }}
-        className="hidden lg:block w-60 fixed top-16 bottom-0 bg-[var(--bg-secondary)] border-r border-[var(--border-default)] overflow-y-auto"
+        style={{ 
+          width: '240px', 
+          flexShrink: 0,
+          position: 'sticky', 
+          top: '64px', 
+          height: 'calc(100vh - 64px)',
+          overflowY: 'auto',
+          background: 'var(--bg-secondary)',
+          borderRight: '1px solid var(--border-default)',
+          zIndex: 40
+        }}
+        className="hidden lg:block"
       >
         <div className="p-4 space-y-1">
           <h3 className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-3 px-3">Admin Panel</h3>
           {sidebarLinks.map(({ to, label, icon: Icon, end }) => {
-            const active = end ? location.pathname === to : location.pathname.startsWith(to) && location.pathname !== '/admin' || (end && location.pathname === to);
             const isActive = end ? location.pathname === to : location.pathname.startsWith(to);
             return (
               <NavLink
@@ -73,7 +83,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-60 p-6 pt-8 lg:pt-6 mt-12 lg:mt-0">
+      <main style={{ flex: 1, overflowX: 'hidden', padding: '24px' }} className="mt-12 lg:mt-0">
         <Routes>
           <Route index element={<OverviewPanel />} />
           <Route path="users" element={<UsersPanel />} />

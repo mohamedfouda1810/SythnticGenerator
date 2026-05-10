@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 import Navbar from './components/layout/Navbar';
@@ -24,9 +25,10 @@ function AppRoutes() {
   const location = useLocation();
 
   return (
-    <PageTransition>
-      <Routes location={location} key={location.pathname}>
-        {/* Public */}
+    <AnimatePresence mode="wait">
+      <PageTransition key={location.pathname}>
+        <Routes location={location}>
+          {/* Public */}
         <Route path="/" element={<HomePage />} />
 
         {/* Guest only */}
@@ -49,6 +51,7 @@ function AppRoutes() {
         <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       </Routes>
     </PageTransition>
+    </AnimatePresence>
   );
 }
 

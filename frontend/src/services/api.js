@@ -3,11 +3,27 @@ import useAuthStore from '../store/authStore';
 
 const BASE_URL = '/api';
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function subscribeTokenRefresh(cb) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+  refreshSubscribers.map((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
 function getToken() {
   return useAuthStore.getState().token;
 }
 
-async function request(url, options = {}) {
+function getRefreshToken() {
+  return useAuthStore.getState().refreshToken || localStorage.getItem('refreshToken');
+}
+
+async function request(url, options = {}, isRetry = false) {
   const token = getToken();
   const headers = { ...options.headers };
 
@@ -21,10 +37,43 @@ async function request(url, options = {}) {
   try {
     const response = await fetch(`${BASE_URL}${url}`, { ...options, headers });
 
-    if (response.status === 401) {
-      useAuthStore.getState().logout();
-      toast.error('Session expired. Please login again.');
-      return { data: null, error: 'Unauthorized' };
+    // Handle 401 Unauthorized (Expired token)
+    if (response.status === 401 && !isRetry) {
+      const refreshToken = getRefreshToken();
+
+      if (!refreshToken) {
+        useAuthStore.getState().logout();
+        toast.error('Session expired. Please login again.');
+        return { data: null, error: 'Unauthorized' };
+      }
+
+      // Try to refresh token
+      if (!isRefreshing) {
+        isRefreshing = true;
+        const { data: refreshData, error: refreshError } = await refreshTokenApi(refreshToken);
+
+        if (!refreshError && refreshData?.access_token) {
+          const newToken = refreshData.access_token;
+          // Update store directly
+          useAuthStore.setState({ token: newToken, isAuthenticated: true });
+          localStorage.setItem('token', newToken);
+
+          isRefreshing = false;
+          onRefreshed(newToken);
+        } else {
+          isRefreshing = false;
+          useAuthStore.getState().logout();
+          toast.error('Session expired. Please login again.');
+          return { data: null, error: 'Unauthorized' };
+        }
+      }
+
+      // Wait for refresh to complete and retry
+      return new Promise((resolve) => {
+        subscribeTokenRefresh((newToken) => {
+          resolve(request(url, options, true));
+        });
+      });
     }
 
     if (response.status === 403) {
@@ -109,7 +158,7 @@ export async function refreshTokenApi(refreshToken) {
   return request('/auth/refresh', {
     method: 'POST',
     body: JSON.stringify({ refresh_token: refreshToken }),
-  });
+  }, true);
 }
 
 export async function verifyEmail(token) {

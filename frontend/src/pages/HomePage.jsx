@@ -101,7 +101,7 @@ export default function HomePage() {
         <div className="absolute inset-0" style={{ zIndex: 0 }}>
           <ParticleBackground />
         </div>
-        <motion.div variants={stagger} initial="hidden" animate="show" className="text-center max-w-3xl mx-auto">
+        <motion.div variants={stagger} initial="hidden" animate="show" className="text-center max-w-3xl mx-auto" style={{ position: 'relative', zIndex: 1 }}>
           <motion.div variants={fadeUp} className="flex justify-center mb-8">
             <motion.div
               animate={{ y: [0, -6, 0], rotate: [0, 5, 0, -5, 0] }}
@@ -153,14 +153,15 @@ export default function HomePage() {
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[var(--text-tertiary)]"
+          style={{ zIndex: 1 }}
         >
           <ArrowDown size={24} />
         </motion.div>
       </section>
 
       {/* ─── STATS BAR ──────────────────────────────────── */}
-      <section className="relative py-16 px-6" style={{ zIndex: 1 }}>
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="relative py-16 px-6" style={{ zIndex: 1, background: 'var(--bg-primary)' }}>
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
@@ -181,7 +182,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── HOW IT WORKS ───────────────────────────────── */}
-      <section className="relative py-20 px-6" style={{ zIndex: 1 }}>
+      <section className="relative py-20 px-6" style={{ zIndex: 1, background: 'var(--bg-primary)' }}>
         <SectionTitle title="How It Works" subtitle="Get synthetic data in three simple steps" />
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 relative">
@@ -217,7 +218,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FEATURES ───────────────────────────────────── */}
-      <section id="features" className="relative py-20 px-6" style={{ zIndex: 1 }}>
+      <section id="features" className="relative py-20 px-6" style={{ zIndex: 1, background: 'var(--bg-primary)' }}>
         <SectionTitle title="Powerful Features" subtitle="Everything you need for synthetic data generation" />
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
@@ -227,6 +228,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
+              style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             >
               <motion.div
                 whileHover={{ y: -8 }}
@@ -241,7 +243,7 @@ export default function HomePage() {
                   <f.icon size={24} style={{ color: f.color }} />
                 </motion.div>
                 <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed" style={{ flex: 1 }}>{f.desc}</p>
               </motion.div>
             </motion.div>
           ))}
@@ -249,12 +251,12 @@ export default function HomePage() {
       </section>
 
       {/* ─── COMPARISON TABLE ───────────────────────────── */}
-      <section className="relative py-20 px-6" style={{ zIndex: 1 }}>
+      <section className="relative py-20 px-6" style={{ zIndex: 1, background: 'var(--bg-primary)' }}>
         <SectionTitle title="Why Choose Us?" subtitle="See how SynthGen compares to the competition" />
         <div className="max-w-4xl mx-auto">
           <div className="rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-default)] overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" style={{ minWidth: '560px' }}>
                 <thead>
                   <tr className="border-b border-[var(--border-default)]">
                     <th className="text-left px-6 py-4 font-medium text-[var(--text-secondary)]">Feature</th>
@@ -301,7 +303,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── CTA BANNER ─────────────────────────────────── */}
-      <section className="relative py-20 px-6" style={{ zIndex: 1 }}>
+      <section className="relative py-20 px-6" style={{ zIndex: 1, background: 'var(--bg-primary)', position: 'relative' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -340,7 +342,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FOOTER ─────────────────────────────────────── */}
-      <footer className="relative border-t border-[var(--border-default)] py-12 px-6" style={{ zIndex: 1 }}>
+      <footer className="relative border-t border-[var(--border-default)] py-12 px-6" style={{ zIndex: 1, background: 'var(--bg-primary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>

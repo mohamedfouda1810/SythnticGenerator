@@ -25,7 +25,7 @@ export default function GeneratePage() {
   const isActive = isGenerating && !isComplete;
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6">
+    <div className="page-content pt-24 pb-20 px-6">
       <div className="max-w-5xl mx-auto">
         {/* Step Indicator */}
         <motion.div

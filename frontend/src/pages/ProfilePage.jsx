@@ -37,7 +37,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6">
+    <div className="page-content pt-24 pb-12 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
           {/* Left — Profile Card */}
