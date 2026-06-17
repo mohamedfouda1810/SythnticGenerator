@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+:root {
+  /* Core Backgrounds */
+  --bg-primary: #030305;
+  --bg-secondary: #080810;
+  --bg-tertiary: #0F0F1A;
+  --bg-elevated: #161625;
+  
+  /* Brand Accents - Vibrant SaaS Palette */
+  --accent-primary: #6366F1; /* Indigo 500 */
+  --accent-primary-hover: #4F46E5; /* Indigo 600 */
+  --accent-secondary: #3B82F6; /* Blue 500 */
+  --accent-success: #10B981; /* Emerald 500 */
+  --accent-error: #EF4444; /* Red 500 */
+  --accent-warning: #F59E0B; /* Amber 500 */
+
+  /* Text Colors */
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --text-tertiary: #6B7280;
+
+  /* Borders & Shadows */
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.15);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  
+  /* Radii */
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Z-Index */
+  --z-navbar: 1000;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODERN INPUT STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+.form-input-premium {
+  @apply w-full h-12 bg-gray-800/40 border border-gray-700/50 rounded-xl text-white text-sm font-medium transition-all duration-300;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-gray-800/60;
+  @apply placeholder:text-gray-500 placeholder:font-normal;
+}
+
+/* Fix for inputs with icons */
+.input-with-icon {
+  @apply pl-12;
+}
+
+.input-with-icon-right {
+  @apply pr-12;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+
+.glass-card {
+  @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-3xl;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-blue-400 font-black;
+}
+
+.btn-glow {
+  @apply shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:shadow-[0_0_25px_rgba(99,102,241,0.6)];
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════════ */
+
+.container-xl {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Page wrapper — adds top padding to clear the fixed navbar */
+.page-content {
+  @apply min-h-screen;
+}
+
+/* Section padding — consistent vertical rhythm across all sections */
+.section-padding {
+  @apply py-16 md:py-24 lg:py-28;
+}
+
+/* Glassmorphism strong — used on navbar, cards, auth forms */
+.glass-morphism-strong {
+  @apply bg-white/[0.04] backdrop-blur-2xl border border-white/[0.10];
+}
+
+/* Glassmorphism — lighter variant for content cards */
+.glass-morphism {
+  @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.06];
+}
+
+/* Hover glow — used on feature cards */
+.hover-glow {
+  @apply hover:shadow-[0_0_30px_rgba(99,102,241,0.12)] hover:border-white/[0.12];
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shine {
+  animation: shine 2s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.02); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-800 rounded-full border-2 border-black;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-indigo-500;
+}
+
+

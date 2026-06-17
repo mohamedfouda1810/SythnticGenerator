@@ -1,0 +1,58 @@
+# ─── Python ───────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+venv/
+.venv/
+.codex_venv/
+*.whl
+
+# ─── Environment ──────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Node.js ──────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# ─── Database ─────────────────────────────
+*.db
+*.db-journal
+*.sqlite
+
+# ─── OS Files ─────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ─── Editors ──────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── Logs ─────────────────────────────────
+*.log
+logs/
+
+# ─── Temporary files ─────────────────────
+temp_files/
+tmp/
+*.tmp
+
+# ─── Test / Coverage ─────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage/
+
+# ─── Docker ───────────────────────────────
+data/
